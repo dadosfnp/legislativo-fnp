@@ -1985,3 +1985,22 @@ class AlertaIndividualTest(TestCase):
         self.assertIsNotNone(n)
         self.assertEqual(n.tipo, _Notificacao.TIPO_COMENTARIO)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_seguindo_list_mostra_so_seguidas(self):
+        from .views import SeguindoListView
+        Proposicao.objects.create(titulo='PL 600/2025', casa='camara', status_publicacao=Proposicao.PUBLICADA)
+        self._seguir()  # segue self.prop (PL 500/2025), nao a PL 600/2025
+        req = _request_with_session('/seguindo/')
+        req.user = self.seguidor
+        resp = SeguindoListView.as_view()(req)
+        conteudo = resp.content.decode()
+        self.assertIn('PL 500/2025', conteudo)
+        self.assertNotIn('PL 600/2025', conteudo)
+
+    def test_seguindo_list_exige_login(self):
+        from django.contrib.auth.models import AnonymousUser
+        from .views import SeguindoListView
+        req = _request_with_session('/seguindo/')
+        req.user = AnonymousUser()
+        resp = SeguindoListView.as_view()(req)
+        self.assertEqual(resp.status_code, 302)

@@ -520,6 +520,38 @@ class FavoritosListView(View):
         )
 
 
+class SeguindoListView(View):
+    """Monitoramento individual: lista as proposições que o usuário segue
+    (ProposicaoSeguida), base dos alertas no sistema e por e-mail. Diferente de
+    Favoritos (sessão/anônimo), seguir exige conta -- por isso login_required."""
+
+    template_name = 'legislativo/seguindo_list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        proposicoes = (
+            Proposicao.objects.publicadas()
+            .select_related('macrotema')
+            .prefetch_related('temas')
+            .filter(seguidores__usuario=request.user)
+            .order_by('-seguidores__criado_em')
+        )
+        return render(
+            request,
+            self.template_name,
+            {
+                'proposicoes': proposicoes,
+                'favoritos_ids': get_favoritos_ids(request),
+                'recebe_email': getattr(getattr(request.user, 'perfil', None), 'receber_email_atualizacoes', False),
+                'page_title': 'Seguindo',
+                'mostrar_sidebar': True,
+            },
+        )
+
+
 @login_required
 def ler_notificacao(request, pk):
     notificacao = get_object_or_404(Notificacao, pk=pk, destinatario=request.user)

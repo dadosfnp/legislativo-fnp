@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Seguindo | Painel Legislativo FNP{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Meu monitoramento</span>
+      <h1>Proposições que sigo</h1>
+      <p>Seu acompanhamento individual. Toda movimentação dessas proposições gera um alerta no sininho{% if recebe_email %} e no seu e-mail{% endif %}.</p>
+      {% if recebe_email %}
+        <p class="hero-note">Alertas por e-mail <strong>ligados</strong> · <a href="{% url 'legislativo:perfil' %}">gerenciar no perfil</a></p>
+      {% else %}
+        <p class="hero-note">Alertas por e-mail <strong>desligados</strong> · <a href="{% url 'legislativo:perfil' %}">ativar no perfil</a></p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="cards-grid">
+    {% if proposicoes %}
+      {% for proposicao in proposicoes %}
+        {% include 'legislativo/_proposicao_card.html' %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p>Você ainda não segue nenhuma proposição. Clique no sino de um card para seguir e receber alertas de movimentação.</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
