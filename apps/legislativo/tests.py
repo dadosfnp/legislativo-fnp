@@ -2259,14 +2259,15 @@ class NormalizarTitulosTest(TestCase):
 
     def test_renomeia_unicos_e_preenche_link(self):
         p1 = self._criar('Altera o art. 159 da Constituição Federal para disciplinar a distribuição de recursos pela União ao FPM.')
-        p2 = self._criar('Desobriga os Municípios com até 65.000 (sessenta e cinco mil) habitantes de comprovar regularidade.')
+        p2 = self._criar('Regularidade fiscal de municípios para transferências voluntárias')
         p3 = self._criar('Institui o Programa Nacional de Municípios Inteligentes e Sustentáveis, cria o FIMU.')
         call_command('normalizar_titulos')
         p1.refresh_from_db(); p2.refresh_from_db(); p3.refresh_from_db()
         self.assertEqual(p1.titulo, 'PEC 29/2017')
         self.assertEqual(p1.casa, 'senado')
         self.assertTrue(p1.link)
-        self.assertEqual(p2.titulo, 'PLP 74/2026')
+        self.assertEqual(p2.titulo, 'LC 237/2026')
+        self.assertIn('Veto 50/2026', p2.status_tramitacao)
         self.assertEqual(p3.titulo, 'PL 3645/2026')
 
     def test_remove_duplicata_movendo_comentarios(self):
