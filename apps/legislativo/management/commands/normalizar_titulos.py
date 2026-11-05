@@ -8,7 +8,7 @@ descritivo e sem link. Números confirmados na fonte oficial (Câmara/Senado):
   descritivo                                          -> oficial
   "PEC da Segurança"                                  -> PEC 18/2025   (duplicata)
   "Altera o art. 159 ... Fundo de Participação ..."   -> PEC 29/2017
-  "Desobriga os Municípios com até 65.000 ..."        -> PLP 74/2026
+  "Regularidade fiscal ... transferências voluntárias" -> LC 237/2026 (c/ veto)
   "Legitimidade para Entidades ... (art. 103, ADC/ADI)" -> PEC 253/2016 (duplicata)
   "Institui o Programa Nacional de Municípios Int..." -> PL 3645/2026
 
@@ -31,10 +31,15 @@ RENOMEAR = [
         'link': 'https://www25.senado.leg.br/web/atividade/materias/-/materia/130672',
     },
     {
-        'match': {'titulo__startswith': 'Desobriga os Municípios com até 65.000'},
-        'titulo': 'PLP 74/2026',
-        'casa': 'camara',
-        'link': 'https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2611313',
+        # A regra que desobriga municípios de até 65 mil hab. de regularidade
+        # fiscal p/ transferências voluntárias virou lei (LC 237/2026) dentro
+        # do PLP 74/2026, com veto parcial (Veto 50/2026) ainda pendente. O
+        # título em produção é "Regularidade fiscal..." (não a ementa).
+        'match': {'titulo__icontains': 'Regularidade fiscal de municípios para transferências voluntárias'},
+        'titulo': 'LC 237/2026',
+        'casa': 'Congresso',
+        'link': 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp237.htm',
+        'status': 'Promulgada em 15/09/2026 — LC 237/2026 (Veto 50/2026 parcial, pendente de apreciação no Congresso)',
     },
     {
         'match': {'titulo__startswith': 'Institui o Programa Nacional de Municípios Inteligentes'},
@@ -92,10 +97,13 @@ class Command(BaseCommand):
                 continue
             self.stdout.write(f'• #{p.pk} "{p.titulo[:50]}…" -> {regra["titulo"]} ({regra["casa"]})')
             if not dry:
-                p.titulo = regra['titulo']
-                p.casa = regra['casa']
-                p.link = regra['link']
-                p.save(update_fields=['titulo', 'casa', 'link'])
+                # .update() (não save()) de propósito: é correção de dado, não
+                # movimentação -- não deve disparar alerta de seguidor mesmo
+                # quando mexe em status_tramitacao (campo de alerta).
+                campos = {'titulo': regra['titulo'], 'casa': regra['casa'], 'link': regra['link']}
+                if regra.get('status'):
+                    campos['status_tramitacao'] = regra['status']
+                Proposicao.objects.filter(pk=p.pk).update(**campos)
 
     def _dedup(self, regra, dry):
         qs = Proposicao.objects.filter(**regra['match'])
