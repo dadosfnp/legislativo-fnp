@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Radar Tributário | Painel Legislativo FNP{% endblock %}
+
+{% block content %}
+  <section class="page-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">Monitoramento automático · time da FNP</span>
+      <h1>Radar Tributário</h1>
+      <p>A varredura automática procura, nas fontes oficiais, proposições novas que casem com os temas abaixo. Cada nova entra na fila de <strong>Pendentes</strong> e dispara alerta (sino + e-mail) para o Legislativo.</p>
+    </div>
+  </section>
+
+  <section class="home-section">
+    <h2 class="section-heading">Temas monitorados</h2>
+    <form method="post" class="radar-add-form">
+      {% csrf_token %}
+      <input type="hidden" name="acao" value="add" />
+      <input type="text" name="termo" class="input-wide" placeholder="Novo tema/palavra-chave (ex.: CBS, IBS, Imposto Seletivo…)" maxlength="120" required />
+      <button type="submit" class="fbtn">Cadastrar tema</button>
+    </form>
+    {% if termos %}
+      <div class="radar-termos">
+        {% for t in termos %}
+          <span class="radar-termo {% if not t.ativo %}radar-termo-inativo{% endif %}">
+            {{ t.termo }}{% if not t.ativo %} (inativo){% endif %}
+            <form method="post" class="radar-termo-remove">
+              {% csrf_token %}
+              <input type="hidden" name="acao" value="remove" />
+              <input type="hidden" name="termo_id" value="{{ t.pk }}" />
+              <button type="submit" title="Remover tema" aria-label="Remover {{ t.termo }}">×</button>
+            </form>
+          </span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state"><p>Nenhum tema cadastrado. Adicione um acima para o radar começar a monitorar.</p></div>
+    {% endif %}
+  </section>
+
+  <section class="home-section">
+    <h2 class="section-heading">Alertas dos temas cadastrados</h2>
+    {% if alertas %}
+      <ul class="radar-alertas">
+        {% for a in alertas %}
+          <li class="radar-alerta">
+            <div class="radar-alerta-topo">
+              <span class="chip chip-tema">{{ a.termo|default:'tema' }}</span>
+              <span class="radar-alerta-data">{{ a.visto_em|date:'d/m/Y H:i' }}</span>
+            </div>
+            <p class="radar-alerta-titulo">{{ a.titulo }}</p>
+            <div class="radar-alerta-acoes">
+              {% if a.proposicao %}
+                <a href="{% url 'legislativo:proposicao_detail' a.proposicao.pk %}">Abrir no painel</a>
+                <span class="radar-alerta-status">{{ a.proposicao.get_status_publicacao_display }}</span>
+              {% endif %}
+              {% if a.proposicao.link %}<a href="{{ a.proposicao.link }}" target="_blank" rel="noopener">Ficha oficial</a>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty-state"><p>Nenhum alerta ainda. Quando a varredura encontrar uma proposição nova sobre os temas, ela aparece aqui (e no sino + e-mail).</p></div>
+    {% endif %}
+  </section>
+{% endblock %}

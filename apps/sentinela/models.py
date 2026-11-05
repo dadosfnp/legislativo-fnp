@@ -1,5 +1,7 @@
 from django.db import models
 
+from apps.proposicoes.models import Proposicao
+
 
 class TermoSentinela(models.Model):
     """Palavra-chave da varredura temática (ex.: CBS, IBS, reforma tributária).
@@ -34,6 +36,14 @@ class ItemSentinelaVisto(models.Model):
     fonte = models.CharField(max_length=16, choices=FONTE_CHOICES)
     id_externo = models.CharField(max_length=32)
     titulo = models.CharField(max_length=255, blank=True)
+    termo = models.CharField(max_length=120, blank=True)
+    proposicao = models.ForeignKey(
+        Proposicao,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='capturas_sentinela',
+    )
     alertado = models.BooleanField(default=False)
     visto_em = models.DateTimeField(auto_now_add=True)
 

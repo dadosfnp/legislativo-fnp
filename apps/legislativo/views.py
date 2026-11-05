@@ -701,6 +701,44 @@ class MonitoramentoInternoView(View):
 
 
 @login_required
+def radar_tributario(request):
+    """Aba do Sentinela Tributário (só time da FNP): cadastrar/remover temas
+    (palavras-chave da varredura) e ver os alertas das proposições já capturadas
+    pelos temas cadastrados."""
+    if not eh_equipe_fnp(request.user):
+        raise PermissionDenied
+
+    from apps.sentinela.models import ItemSentinelaVisto, TermoSentinela
+
+    if request.method == 'POST':
+        acao = request.POST.get('acao')
+        if acao == 'add':
+            termo = (request.POST.get('termo') or '').strip()
+            if termo and not rate_limited('radar_termo', request, limit=30, window_seconds=600):
+                TermoSentinela.objects.get_or_create(termo=termo, defaults={'ativo': True})
+        elif acao == 'remove':
+            TermoSentinela.objects.filter(pk=request.POST.get('termo_id')).delete()
+        return redirect('legislativo:radar_tributario')
+
+    termos = TermoSentinela.objects.order_by('-ativo', 'termo')
+    alertas = (
+        ItemSentinelaVisto.objects.filter(alertado=True)
+        .select_related('proposicao')
+        .order_by('-visto_em')[:100]
+    )
+    return render(
+        request,
+        'legislativo/radar_tributario.html',
+        {
+            'termos': termos,
+            'alertas': alertas,
+            'page_title': 'Radar Tributário',
+            'mostrar_sidebar': True,
+        },
+    )
+
+
+@login_required
 def ler_notificacao(request, pk):
     notificacao = get_object_or_404(Notificacao, pk=pk, destinatario=request.user)
     notificacao.lida = True
