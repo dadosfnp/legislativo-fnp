@@ -1,8 +1,10 @@
 from unittest import mock
 
 from django.core import mail
+from django.core.cache import cache
 from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from apps.comentarios.models import Notificacao
 from apps.proposicoes.models import Proposicao
@@ -96,3 +98,54 @@ class SentinelaTest(TestCase):
     def test_termos_seed_carregados(self):
         self.assertTrue(TermoSentinela.objects.filter(termo='CBS', ativo=True).exists())
         self.assertTrue(TermoSentinela.objects.filter(termo='IBS', ativo=True).exists())
+
+
+class RadarTributarioViewTest(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.equipe = Usuario.objects.create_user(username='eq', email='eq@fnp.org.br', password='x')
+        self.equipe.perfil.classe_usuario = Perfil.EQUIPE_FNP
+        self.equipe.perfil.status_aprovacao = Perfil.APROVADO
+        self.equipe.perfil.save()
+        self.publico = Usuario.objects.create_user(username='pb', email='pb@cidade.gov.br', password='x')
+        self.publico.perfil.classe_usuario = Perfil.PREFEITO
+        self.publico.perfil.status_aprovacao = Perfil.APROVADO
+        self.publico.perfil.save()
+        self.url = reverse('legislativo:radar_tributario')
+
+    def test_equipe_ve_a_aba_com_termos(self):
+        self.client.force_login(self.equipe)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Radar Tributário')
+        self.assertContains(resp, 'CBS')  # termo do seed
+
+    def test_publico_bloqueado(self):
+        self.client.force_login(self.publico)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 403)
+
+    def test_cadastrar_tema(self):
+        self.client.force_login(self.equipe)
+        resp = self.client.post(self.url, {'acao': 'add', 'termo': 'ICMS partilha'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(TermoSentinela.objects.filter(termo='ICMS partilha', ativo=True).exists())
+
+    def test_remover_tema(self):
+        t = TermoSentinela.objects.create(termo='tema para remover')
+        self.client.force_login(self.equipe)
+        self.client.post(self.url, {'acao': 'remove', 'termo_id': t.pk})
+        self.assertFalse(TermoSentinela.objects.filter(pk=t.pk).exists())
+
+    def test_ve_alertas_capturados(self):
+        prop = Proposicao.objects.create(
+            titulo='PLP 300/2026', casa='camara',
+            link='https://www.camara.leg.br/x', status_publicacao=Proposicao.PENDENTE,
+        )
+        ItemSentinelaVisto.objects.create(
+            fonte='camara', id_externo='9', titulo='PLP 300/2026',
+            termo='CBS', proposicao=prop, alertado=True,
+        )
+        self.client.force_login(self.equipe)
+        resp = self.client.get(self.url)
+        self.assertContains(resp, 'PLP 300/2026')

@@ -72,10 +72,11 @@ class Command(BaseCommand):
                     Q(link=cand['link']) | Q(titulo=cand['titulo'])
                 ).exists()
 
+                visto = None
                 if not dry:
-                    ItemSentinelaVisto.objects.create(
+                    visto = ItemSentinelaVisto.objects.create(
                         fonte=cand['fonte'], id_externo=cand['id_externo'],
-                        titulo=cand['titulo'], alertado=False,
+                        titulo=cand['titulo'], termo=cand.get('termo', ''), alertado=False,
                     )
                 novos += 1
 
@@ -85,6 +86,10 @@ class Command(BaseCommand):
 
                 prop = self._criar_pendente(cand, macrotema, dry)
                 self._alertar(equipe, prop, cand, dry)
+                if visto is not None:
+                    visto.proposicao = prop
+                    visto.alertado = True
+                    visto.save(update_fields=['proposicao', 'alertado'])
                 alertados += 1
                 self.stdout.write(f'  • NOVO: {cand["titulo"]} ({cand["termo"]}) — pendente + alerta p/ {len(equipe)} do Leg')
 

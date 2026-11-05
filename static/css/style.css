@@ -1010,6 +1010,43 @@ body {
 [data-theme="dark"] .monitoramento-hint { color: #94a3b8; }
 [data-theme="dark"] .monitoramento-remover-btn { border-color: #475569; color: #fca5a5; }
 [data-theme="dark"] .monitoramento-remover-btn:hover { background: rgba(239, 68, 68, 0.12); border-color: #7f1d1d; }
+
+/* Radar Tributário (aba do sentinela). */
+.radar-add-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.radar-add-form .input-wide { flex: 1 1 320px; padding: 0.55rem 0.7rem; border: 1px solid #cbd5e1; border-radius: 0.6rem; font: inherit; }
+.radar-termos { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.radar-termo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(26, 75, 143, 0.08);
+  border: 1px solid rgba(26, 75, 143, 0.2);
+  color: #1A4B8F;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.radar-termo-inativo { opacity: 0.55; }
+.radar-termo-remove { display: inline; margin: 0; }
+.radar-termo-remove button {
+  background: transparent; border: none; cursor: pointer;
+  color: #64748b; font-size: 1rem; line-height: 1; padding: 0 0.2rem;
+}
+.radar-termo-remove button:hover { color: #b91c1c; }
+.radar-alertas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.radar-alerta { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.9rem; padding: 0.85rem 1rem; }
+.radar-alerta-topo { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+.radar-alerta-data { font-size: 0.78rem; color: #64748b; }
+.radar-alerta-titulo { margin: 0 0 0.4rem; font-weight: 600; }
+.radar-alerta-acoes { display: flex; flex-wrap: wrap; gap: 0.8rem; align-items: center; font-size: 0.85rem; }
+.radar-alerta-status { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; }
+
+[data-theme="dark"] .radar-add-form .input-wide { background: #1e293b; border-color: #475569; color: #e2e8f0; }
+[data-theme="dark"] .radar-termo { background: rgba(26, 75, 143, 0.25); border-color: rgba(148, 163, 184, 0.3); color: #bfdbfe; }
+[data-theme="dark"] .radar-alerta { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .radar-alerta-data { color: #94a3b8; }
+
 /* badge-pauta tinha uma cor fixa (vermelha) pra "PAUTA" e "SEM PAUTA" --
    "sem pauta" (situação neutra, maioria dos casos) ficava com a mesma cor
    de alerta de "pauta" (situação que pede ação). -on/-off distinguem as
