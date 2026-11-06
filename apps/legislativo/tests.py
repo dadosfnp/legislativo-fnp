@@ -16,9 +16,17 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
-from apps.comentarios.models import Comentario, ComentarioLike, PalavraProibida
+from apps.comentarios.models import Comentario, ComentarioLike, Notificacao, PalavraProibida
 from apps.comentarios.moderacao import classificar_comentario, contem_palavra_proibida
-from apps.proposicoes.models import AnexoProposicao, EdicaoMeritoHistorico, Macrotema, Noticia, Proposicao, Tema
+from apps.proposicoes.models import (
+    AnexoProposicao,
+    EdicaoMeritoHistorico,
+    Macrotema,
+    Noticia,
+    Proposicao,
+    ProposicaoSeguida,
+    Tema,
+)
 from apps.usuarios.middleware import CadastroPendenteMiddleware, MFAObrigatorioStaffMiddleware
 from apps.usuarios.models import Perfil, Usuario
 
@@ -2297,3 +2305,87 @@ class NormalizarTitulosTest(TestCase):
         call_command('normalizar_titulos', dry_run=True)
         p.refresh_from_db()
         self.assertTrue(p.titulo.startswith('Institui'))
+
+
+class AtualizarTramitacaoTest(TestCase):
+    """Atualizador dirigido (v1 Câmara): refresca a última movimentação das
+    proposições já publicadas a partir da ficha oficial da Câmara e dispara o
+    alerta para quem segue. O Senado fica de fora na v1 (API em migração)."""
+
+    def setUp(self):
+        mail.outbox = []
+        Notificacao.objects.all().delete()
+        self.prop = Proposicao.objects.create(
+            titulo='PLP 186/2026',
+            casa='camara',
+            link='https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2635476',
+            status_publicacao=Proposicao.PUBLICADA,
+            ultima_movimentacao='status antigo',
+        )
+
+    def _patch(self, ultima):
+        return mock.patch('apps.proposicoes.fontes.buscar_status_camara', return_value={'ultima': ultima})
+
+    def test_atualiza_ultima_movimentacao_da_camara(self):
+        novo = '21/10/2026: Transformado na Lei Complementar 238/2026'
+        with self._patch(novo):
+            call_command('atualizar_tramitacao')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.ultima_movimentacao, novo)
+
+    def test_alerta_seguidor_quando_muda(self):
+        seguidor = Usuario.objects.create_user(username='seg', email='seg@fnp.org.br', password='x')
+        ProposicaoSeguida.objects.create(usuario=seguidor, proposicao=self.prop)
+        with self._patch('03/11/2026: movimentação nova'):
+            call_command('atualizar_tramitacao')
+        self.assertTrue(
+            Notificacao.objects.filter(destinatario=seguidor, proposicao=self.prop).exists()
+        )
+
+    def test_quiet_atualiza_sem_alertar(self):
+        seguidor = Usuario.objects.create_user(username='seg2', email='seg2@fnp.org.br', password='x')
+        ProposicaoSeguida.objects.create(usuario=seguidor, proposicao=self.prop)
+        with self._patch('03/11/2026: movimentação quiet'):
+            call_command('atualizar_tramitacao', quiet=True)
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.ultima_movimentacao, '03/11/2026: movimentação quiet')
+        self.assertFalse(Notificacao.objects.filter(proposicao=self.prop).exists())
+
+    def test_nao_alerta_quando_igual(self):
+        self.prop.ultima_movimentacao = 'texto identico'
+        self.prop.save()
+        Notificacao.objects.all().delete()
+        with self._patch('texto identico'):
+            call_command('atualizar_tramitacao')
+        self.assertEqual(Notificacao.objects.count(), 0)
+
+    def test_dry_run_nao_grava(self):
+        with self._patch('nao deveria gravar'):
+            call_command('atualizar_tramitacao', dry_run=True)
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.ultima_movimentacao, 'status antigo')
+
+    def test_pula_senado(self):
+        senado = Proposicao.objects.create(
+            titulo='PEC 99/2025',
+            casa='senado',
+            link='https://www25.senado.leg.br/web/atividade/materias/-/materia/999',
+            status_publicacao=Proposicao.PUBLICADA,
+            ultima_movimentacao='antigo senado',
+        )
+        with mock.patch('apps.proposicoes.fontes.buscar_status_camara') as m:
+            call_command('atualizar_tramitacao', titulo='PEC 99/2025')
+            m.assert_not_called()
+        senado.refresh_from_db()
+        self.assertEqual(senado.ultima_movimentacao, 'antigo senado')
+
+    def test_titulo_filtra_uma_so(self):
+        with mock.patch('apps.proposicoes.fontes.buscar_status_camara', return_value={'ultima': 'x 2026'}) as m:
+            call_command('atualizar_tramitacao', titulo='PLP 186/2026')
+            self.assertEqual(m.call_count, 1)
+
+    def test_fonte_sem_resultado_nao_quebra_nem_grava(self):
+        with mock.patch('apps.proposicoes.fontes.buscar_status_camara', return_value=None):
+            call_command('atualizar_tramitacao')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.ultima_movimentacao, 'status antigo')
