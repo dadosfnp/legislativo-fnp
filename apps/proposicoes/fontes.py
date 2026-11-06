@@ -128,6 +128,48 @@ def buscar_senado(tipo: str, numero: int, ano: int):
     )
 
 
+def buscar_status_camara(prop_id):
+    """Situação atual de uma proposição da Câmara pelo ``idProposicao``.
+
+    Usado pelo atualizador dirigido (``atualizar_tramitacao``) para refrescar a
+    última movimentação das proposições já no painel. Devolve um dicionário com
+    a movimentação já formatada em ``ultima`` (``None`` se a API falhar ou não
+    trouxer dados — nenhuma exceção de rede escapa)."""
+    try:
+        det = requests.get(f'{CAMARA_API}/proposicoes/{prop_id}', timeout=TIMEOUT)
+        det.raise_for_status()
+        status = det.json().get('dados', {}).get('statusProposicao') or {}
+    except requests.RequestException:
+        return None
+    if not status:
+        return None
+
+    situacao = status.get('descricaoSituacao') or ''
+    tramitacao = status.get('descricaoTramitacao') or ''
+    despacho = (status.get('despacho') or '').strip()
+    orgao = status.get('siglaOrgao') or ''
+    data_hora = status.get('dataHora') or ''
+    data_fmt = ''
+    if data_hora:
+        try:
+            data_fmt = datetime.fromisoformat(data_hora).strftime('%d/%m/%Y')
+        except ValueError:
+            data_fmt = ''
+
+    corpo = despacho or tramitacao or situacao
+    if not corpo:
+        return None
+    ultima = f'{data_fmt}: {corpo}' if data_fmt else corpo
+    return {
+        'situacao': situacao,
+        'orgao': orgao,
+        'tramitacao': tramitacao,
+        'despacho': despacho,
+        'data': data_fmt,
+        'ultima': ultima.strip(),
+    }
+
+
 def buscar_proposicao(tipo: str, numero: int, ano: int):
     """Tenta a Câmara; se não achar, o Senado. Devolve o dicionário
     normalizado ou ``None``."""
