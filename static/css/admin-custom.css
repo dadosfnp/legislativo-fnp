@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
 
 /* Reskin do Django Admin com a identidade visual do Painel Legislativo FNP.
    Django 4.2 expõe o tema inteiro via custom properties — só sobrescrevemos
@@ -12,30 +12,30 @@
   /* Azul-marinho é cor de destaque (botões, links, item ativo do menu e a
      barra lateral) — nunca fundo de superfície. Cabeçalho, breadcrumb e
      conteúdo ficam sempre claros, igual ao resto da plataforma. */
-  --primary: #193657;
-  --secondary: #142943;
-  --accent: #2f6fb3;
+  --primary: #103758;
+  --secondary: #0c2a44;
+  --accent: #1e4784;
   --primary-fg: #fff;
 
-  --header-color: #0f172a;
-  --header-branding-color: #0f172a;
+  --header-color: #103758;
+  --header-branding-color: #103758;
   --header-bg: #fff;
-  --header-link-color: #193657;
+  --header-link-color: #103758;
 
-  --breadcrumbs-fg: #64748b;
-  --breadcrumbs-link-fg: #193657;
+  --breadcrumbs-fg: #5d6b7c;
+  --breadcrumbs-link-fg: #103758;
   --breadcrumbs-bg: #fff;
 
-  --link-fg: #193657;
-  --link-hover-color: #2f6fb3;
-  --link-selected-fg: #193657;
+  --link-fg: #1e4784;
+  --link-hover-color: #103758;
+  --link-selected-fg: #103758;
 
   --button-bg: var(--primary);
-  --button-hover-bg: #234a75;
+  --button-hover-bg: #1e4784;
   --default-button-bg: var(--secondary);
-  --default-button-hover-bg: #0d1e33;
+  --default-button-hover-bg: #081c2e;
 
-  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-family-primary: 'Work Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 #header {
@@ -670,9 +670,13 @@ a.button {
    templates/_sidebar.html e admin/nav_sidebar.html (markup próprio, sem a
    tabela padrão do Django). */
 
+/* Sidebar clara, igual ao menu lateral público (identidade "Território",
+   2026-11-12) -- antes era escura ("só a barra lateral é escura", decisão
+   de 2026-08); revisto a pedido do usuário pra ficar exatamente no mesmo
+   estilo do resto do sistema. */
 #nav-sidebar {
-  background-color: var(--secondary);
-  border-right: none;
+  background-color: #e8eef7;
+  border-right: 1px solid #d8e0ea;
   padding-top: 0.75rem;
   padding-bottom: 1rem;
 }
@@ -682,14 +686,14 @@ a.button {
 }
 
 #toggle-nav-sidebar {
-  background-color: var(--secondary);
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background-color: #e8eef7;
+  border-right: 1px solid #d8e0ea;
+  color: #103758;
 }
 
 #toggle-nav-sidebar:hover,
 #toggle-nav-sidebar:focus {
-  background-color: var(--primary);
+  background-color: #dce5f1;
 }
 
 .fnp-nav {
@@ -737,30 +741,32 @@ a.button {
    ilegíveis. */
 #nav-sidebar .fnp-nav-link:link,
 #nav-sidebar .fnp-nav-link:visited {
-  color: rgba(255, 255, 255, 0.85);
+  color: #103758;
 }
 
 #nav-sidebar .fnp-nav-link:hover,
 #nav-sidebar .fnp-nav-link:focus {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: #dce5f1;
+  color: #103758;
 }
 
+/* Pílula amarela do item ativo, mesma linguagem do menu lateral público
+   (guia de estilo "Território") -- marca "você está aqui" em todo lugar. */
 #nav-sidebar .fnp-nav-link.active:link,
 #nav-sidebar .fnp-nav-link.active:visited {
-  background: var(--primary);
-  color: #fff;
+  background: #eeaf19;
+  color: #103758;
   font-weight: 600;
 }
 
 .fnp-nav-link-disabled {
-  color: rgba(255, 255, 255, 0.35);
+  color: #8b98a8;
   cursor: default;
 }
 
 .fnp-nav-link-disabled:hover {
   background: transparent;
-  color: rgba(255, 255, 255, 0.35);
+  color: #8b98a8;
 }
 
 /* Grupos recolhíveis (apps com mais de um model) — <details>/<summary>
@@ -777,7 +783,7 @@ a.button {
   border-radius: 0.6rem;
   font-weight: 500;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #103758;
   cursor: pointer;
   list-style: none;
 }
@@ -789,8 +795,8 @@ a.button {
 }
 
 .fnp-nav-summary:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: #dce5f1;
+  color: #103758;
 }
 
 .fnp-nav-label {
@@ -814,7 +820,7 @@ a.button {
 }
 
 .fnp-nav-group[open] > .fnp-nav-summary {
-  color: #fff;
+  color: #103758;
   font-weight: 600;
 }
 
@@ -827,7 +833,7 @@ a.button {
   flex-direction: column;
   margin: 0.1rem 0 0.3rem;
   padding-left: 1.35rem;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid #d8e0ea;
   margin-left: 1.25rem;
 }
 

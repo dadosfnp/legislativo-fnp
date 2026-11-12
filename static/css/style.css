@@ -1,14 +1,68 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: light;
   color: #111827;
   background: #f5f7fa;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Identidade "Território" (FNP) -- tokens trazidos do guia de estilo único
+   da FNP (sistema-fnp), 2026-11-12. As variáveis antigas (--bg-surface,
+   --text-primary etc., mais abaixo) viram alias das novas, pra não quebrar
+   as regras que já dependem delas; componente novo usa a variável nova
+   diretamente. */
+:root {
+  --fonte-texto: 'Work Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fonte-titulo: 'Outfit', 'Work Sans', system-ui, sans-serif;
+
+  --territorio-marinho: #103758;
+  --territorio-azul: #1e4784;
+  --territorio-verde: #1c8846;
+  --territorio-acento: #eeaf19;
+  --territorio-acento-texto: #103758;
+  --territorio-acento-claro: #f5cb55;
+  --fnp-amarelo: #eeaf19;
+  --fnp-verde: #1c8846;
+  --fnp-sobre-amarelo: #103758;
+  --fnp-gradiente: linear-gradient(135deg, #103758 0%, #1e4784 100%);
+
+  --ceu: #E8EEF7;
+  --ceu-2: #DCE5F1;
+  --territorio-linha: #D8E0EA;
+  --cor-superficie: #ffffff;
+  --cor-superficie-2: #f5f7fa;
+  --cor-superficie-3: #edf1f5;
+  --cor-texto: #13263a;
+  --cor-texto-2: #33435a;
+  --cor-texto-suave: #5d6b7c;
+  --tinta-2: #47586C;
+  --cor-borda: #dde3ea;
+  --cor-borda-suave: #e9eef3;
+  --campo-borda: #76879D;
+  --cor-link: #1e4784;
+  --cor-foco: #4d72b0;
+  --foco-anel: #eeaf19;
+  --foco-contorno: #103758;
+  --foco-sombra: 0 0 0 2px var(--foco-contorno);
+
+  --cor-perigo: #b42318;
+  --cor-perigo-solido: #d92d20;
+  --cor-perigo-claro: #fef3f2;
+  --cor-perigo-claro-borda: #fecdca;
+
+  --raio-sm: .375rem;
+  --raio-md: .625rem;
+  --sombra-mesa: 0 22px 44px -28px rgba(16, 55, 88, .55), 0 2px 6px -3px rgba(16, 55, 88, .18);
+  --sombra-popover: 0 8px 24px -8px rgba(16, 55, 88, .18), 0 0 0 1px rgba(16, 55, 88, .06);
 }
 
 * {
   box-sizing: border-box;
+}
+
+h1, h2, h3, .fbtn, .app-topbar-title, .sidebar-link, .stat-num, .font-titulo {
+  font-family: var(--fonte-titulo);
 }
 
 html {
@@ -126,7 +180,7 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #1a4b8f;
+  background: var(--territorio-azul);
   color: #fff;
   text-decoration: none;
   font-weight: 700;
@@ -156,7 +210,7 @@ body {
 }
 
 .eyebrow {
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -185,42 +239,43 @@ body {
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 1rem;
-  padding: 1.35rem 1.25rem;
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+  background: var(--cor-superficie);
+  border-radius: var(--raio-md);
+  padding: 1.25rem 1.5rem;
+  box-shadow: none;
+  border: 1px solid var(--cor-borda);
   display: block;
   text-decoration: none;
-  border: 2px solid transparent;
-  transition: border-color .15s ease, transform .15s ease;
+  transition: border-color .15s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
+  border-color: var(--territorio-azul);
 }
 
 .stat-card.active {
-  border-color: #193657;
+  border-color: var(--territorio-azul);
+  box-shadow: inset 0 -3px 0 var(--territorio-acento);
 }
 
 .stat-label {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted, #6b7280);
-  margin-bottom: 0.75rem;
+  font-size: .84375rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--cor-texto-suave);
+  margin-bottom: 0.25rem;
 }
 
-/* Mesma cor escura do título de seção (.section-heading) em todos os
-   cards -- eram coloridos por categoria antes (azul/vermelho/laranja/
-   verde), o que lia como decoração e não como "esse é o número em
-   destaque", que é o efeito que o card de Urgentes/section-heading tem. */
+/* Número leve (Outfit 300), igual ao .kit-numero-valor do Território --
+   eram coloridos por categoria antes (azul/vermelho/laranja/verde), o que
+   lia como decoração e não como "esse é o número em destaque". */
 .stat-num {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
+  font-size: 2.25rem;
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--territorio-marinho);
+  font-variant-numeric: tabular-nums;
 }
 
 .search-panel {
@@ -354,8 +409,8 @@ body {
 }
 
 .search-form input:focus {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 4px rgba(26, 75, 143, 0.08);
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 4px rgba(30, 71, 132, 0.08);
 }
 
 .fbtn {
@@ -365,20 +420,20 @@ body {
   padding: 1rem 1.4rem;
   border: none;
   border-radius: 999px;
-  background: #1a4b8f;
+  background: var(--territorio-marinho);
   color: #fff;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
-  transition: transform .15s ease, opacity .15s ease;
+  transition: background-color .15s ease, transform .15s ease;
 }
 
 .fbtn:hover {
+  background: var(--territorio-azul);
   transform: translateY(-1px);
-  opacity: 0.95;
 }
 
 .perfil-conta-link-danger-btn {
-  background: #dc2626;
+  background: var(--cor-perigo-solido);
 }
 
 .tema-dropdown {
@@ -408,15 +463,15 @@ body {
 }
 
 .tema-dropdown[open] .tema-dropdown-trigger {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 4px rgba(26, 75, 143, 0.1);
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 4px rgba(30, 71, 132, 0.1);
 }
 
 .tema-dropdown-icon {
   display: inline-flex;
   width: 1.1rem;
   height: 1.1rem;
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   flex-shrink: 0;
 }
 
@@ -435,7 +490,7 @@ body {
 }
 
 .tema-dropdown-label strong {
-  color: #1a4b8f;
+  color: var(--territorio-azul);
 }
 
 .tema-dropdown-chevron {
@@ -477,8 +532,8 @@ body {
 }
 
 .tema-dropdown-search:focus {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 3px rgba(26, 75, 143, 0.08);
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 3px rgba(30, 71, 132, 0.08);
 }
 
 .tema-dropdown-list {
@@ -502,7 +557,7 @@ body {
 }
 
 .tema-option.active {
-  background: #1a4b8f;
+  background: var(--territorio-azul);
   color: #fff;
   font-weight: 600;
 }
@@ -545,7 +600,7 @@ body {
   background: #fff;
   padding: 1.35rem;
   position: relative;
-  border-left: 4px solid #1a4b8f;
+  border-left: 4px solid var(--territorio-azul);
   box-shadow: 0 25px 45px rgba(15, 23, 42, 0.08);
   transition: transform .25s ease, box-shadow .25s ease;
 }
@@ -559,7 +614,7 @@ body {
   display: grid;
   gap: 0.65rem;
   background:
-    linear-gradient(180deg, rgba(26, 75, 143, 0.03), rgba(255, 255, 255, 0.98)),
+    linear-gradient(180deg, rgba(30, 71, 132, 0.03), rgba(255, 255, 255, 0.98)),
     #fff;
 }
 
@@ -771,9 +826,9 @@ body {
 }
 
 .chip-tema {
-  background: #eff6ff;
-  color: #1a4b8f;
-  border: 1px solid rgba(26, 75, 143, 0.15);
+  background: #eef3fa;
+  color: var(--territorio-azul);
+  border: 1px solid #bccfea;
 }
 
 .chip-tema-link {
@@ -859,13 +914,15 @@ body {
   letter-spacing: 0.06em;
 }
 
-.tag-alta   { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; }
-.tag-media  { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
-.tag-baixa  { background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
-.tag-vitoria{ background: linear-gradient(135deg, #FFC72C, #eab308); color: #1A4B8F; font-weight: 700; }
-.tag-normal { background: linear-gradient(135deg, #f8fafc, #f1f5f9); color: #475569; border: 1px solid #cbd5e1; }
-.tag-urgente{ background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; font-weight: 700; letter-spacing: .05em; animation: pulse 2s infinite; }
-.tag-aprovada{ background: linear-gradient(135deg, #059669, #047857); color: #fff; font-weight: 700; letter-spacing: .05em; }
+/* Cor chapada (não degradê) -- regra do Território: "cor pelo significado,
+   nunca por enfeite" (guia-de-estilo-fnp.md). */
+.tag-alta   { background: var(--cor-perigo-solido); color: #fff; }
+.tag-media  { background: var(--territorio-acento); color: var(--territorio-acento-texto); }
+.tag-baixa  { background: var(--territorio-verde); color: #fff; }
+.tag-vitoria{ background: var(--territorio-acento); color: var(--territorio-acento-texto); font-weight: 700; }
+.tag-normal { background: var(--cor-superficie-3); color: var(--cor-texto-2); border: 1px solid var(--cor-borda); }
+.tag-urgente{ background: var(--cor-perigo-solido); color: #fff; font-weight: 700; letter-spacing: .05em; animation: pulse 2s infinite; }
+.tag-aprovada{ background: var(--territorio-verde); color: #fff; font-weight: 700; letter-spacing: .05em; }
 
 /* Tag de posicionamento institucional da FNP (com a logo) no card/detalhe --
    logo sempre num chip branco pra ficar legível sobre a cor do posicionamento. */
@@ -891,16 +948,16 @@ body {
   border-radius: 0.3rem;
   padding: 2px 4px;
 }
-.tag-posicao-favoravel           { background: linear-gradient(135deg, #16a34a, #15803d); }
-.tag-posicao-favoravel_ressalvas { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.tag-posicao-contrario           { background: linear-gradient(135deg, #dc2626, #b91c1c); }
-.tag-posicao-contrario_negociar  { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.tag-posicao-favoravel           { background: var(--territorio-verde); }
+.tag-posicao-favoravel_ressalvas { background: var(--territorio-acento); color: var(--territorio-acento-texto); }
+.tag-posicao-contrario           { background: var(--cor-perigo-solido); }
+.tag-posicao-contrario_negociar  { background: #c2410c; }
 
 /* Bloco "Prioridades da FNP" no topo da home -- cartão com a marca FNP
-   (azul #1A4B8F / amarelo #FFC72C). */
+   (azul --territorio-azul / amarelo --territorio-acento). */
 .prioridades-fnp {
-  background: linear-gradient(135deg, rgba(26, 75, 143, 0.06), rgba(255, 199, 44, 0.08));
-  border: 1px solid rgba(26, 75, 143, 0.15);
+  background: linear-gradient(135deg, rgba(30, 71, 132, 0.06), rgba(238, 175, 25, 0.08));
+  border: 1px solid rgba(30, 71, 132, 0.15);
   border-radius: 1.25rem;
   padding: 1.25rem 1.25rem 1.5rem;
 }
@@ -917,7 +974,7 @@ body {
 }
 
 /* Painel de curadoria (só aprovador) na página da proposição. */
-.curadoria-panel { border: 1px dashed rgba(26, 75, 143, 0.4); }
+.curadoria-panel { border: 1px dashed rgba(30, 71, 132, 0.4); }
 .curadoria-ajuda { color: #64748b; font-size: 0.85rem; margin-bottom: 0.75rem; }
 .curadoria-form {
   display: flex;
@@ -942,8 +999,8 @@ body {
 }
 .curadoria-select:focus,
 .curadoria-ordem:focus {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 4px rgba(26, 75, 143, 0.08);
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 4px rgba(30, 71, 132, 0.08);
 }
 .curadoria-ordem { width: 7rem; }
 .curadoria-check {
@@ -956,13 +1013,13 @@ body {
 .curadoria-check input[type="checkbox"] {
   width: 1.15rem;
   height: 1.15rem;
-  accent-color: #1a4b8f;
+  accent-color: var(--territorio-azul);
   cursor: pointer;
 }
 .curadoria-form .fbtn { align-self: flex-start; margin-top: 0.5rem; }
 
 [data-theme="dark"] .prioridades-fnp {
-  background: linear-gradient(135deg, rgba(26, 75, 143, 0.18), rgba(255, 199, 44, 0.1));
+  background: linear-gradient(135deg, rgba(30, 71, 132, 0.18), rgba(238, 175, 25, 0.1));
   border-color: rgba(148, 163, 184, 0.25);
 }
 [data-theme="dark"] .prioridades-fnp-sub { color: #94a3b8; }
@@ -983,7 +1040,7 @@ body {
   margin-left: 0.5rem;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  background: #1A4B8F;
+  background: var(--territorio-azul);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -1021,9 +1078,9 @@ body {
   gap: 0.35rem;
   padding: 0.3rem 0.4rem 0.3rem 0.75rem;
   border-radius: 999px;
-  background: rgba(26, 75, 143, 0.08);
-  border: 1px solid rgba(26, 75, 143, 0.2);
-  color: #1A4B8F;
+  background: rgba(30, 71, 132, 0.08);
+  border: 1px solid rgba(30, 71, 132, 0.2);
+  color: var(--territorio-azul);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -1043,7 +1100,7 @@ body {
 .radar-alerta-status { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; }
 
 [data-theme="dark"] .radar-add-form .input-wide { background: #1e293b; border-color: #475569; color: #e2e8f0; }
-[data-theme="dark"] .radar-termo { background: rgba(26, 75, 143, 0.25); border-color: rgba(148, 163, 184, 0.3); color: #bfdbfe; }
+[data-theme="dark"] .radar-termo { background: rgba(30, 71, 132, 0.25); border-color: rgba(148, 163, 184, 0.3); color: #bfdbfe; }
 [data-theme="dark"] .radar-alerta { background: #1e293b; border-color: #334155; }
 [data-theme="dark"] .radar-alerta-data { color: #94a3b8; }
 
@@ -1051,9 +1108,9 @@ body {
    "sem pauta" (situação neutra, maioria dos casos) ficava com a mesma cor
    de alerta de "pauta" (situação que pede ação). -on/-off distinguem as
    duas situações. */
-.badge-pauta-on  { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-.badge-pauta-off { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.badge-parada { background: #fefce8; color: #a16207; border: 1px solid #fef08a; font-size: 10px; }
+.badge-pauta-on  { background: var(--cor-perigo-claro); color: var(--cor-perigo-solido); border: 1px solid var(--cor-perigo-claro-borda); }
+.badge-pauta-off { background: var(--cor-superficie-3); color: var(--cor-texto-suave); border: 1px solid var(--cor-borda); }
+.badge-parada { background: #fef8e8; color: #7a540f; border: 1px solid #f9df8f; font-size: 10px; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
 
@@ -1091,15 +1148,17 @@ body {
 }
 
 .alert-erro {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: var(--cor-perigo-claro);
+  color: var(--cor-perigo);
+  border: 1px solid var(--cor-perigo-claro-borda);
+  border-left: 4px solid #d92d20;
 }
 
 .alert-sucesso {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
+  background: #ecf7f0;
+  color: #125a2e;
+  border: 1px solid #d2ecdb;
+  border-left: 4px solid var(--territorio-verde);
 }
 
 .pendentes-lista {
@@ -1189,16 +1248,16 @@ body {
 .pagination-link {
   padding: 0.6rem 1.1rem;
   border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #1a4b8f;
+  border: 1px solid var(--campo-borda);
+  background: var(--cor-superficie);
+  color: var(--territorio-azul);
   font-weight: 600;
   font-size: 0.88rem;
   text-decoration: none;
 }
 
 .pagination-link:hover {
-  border-color: #1a4b8f;
+  border-color: var(--territorio-azul);
 }
 
 .pagination-status {
@@ -1215,7 +1274,9 @@ body {
 .auth-page {
   display: flex;
   justify-content: center;
-  padding: 2rem 0 4rem;
+  padding: 3rem 1rem 4rem;
+  background: var(--fnp-gradiente);
+  border-radius: var(--raio-md);
 }
 
 .auth-card {
@@ -1355,7 +1416,8 @@ body {
 .auth-form input[type="text"],
 .auth-form input[type="email"],
 .auth-form input[type="password"],
-.auth-form input[type="tel"] {
+.auth-form input[type="tel"],
+.auth-form select {
   width: 100%;
   padding: 0.85rem 1rem;
   border: 1px solid #d1d5db;
@@ -1366,11 +1428,15 @@ body {
   font-size: 1rem;
   margin-bottom: 0.9rem;
   outline: none;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font-family: var(--fonte-texto);
 }
 
-.auth-form input:focus {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 3px rgba(26, 75, 143, 0.08);
+.auth-form input:focus,
+.auth-form select:focus {
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 3px rgba(30, 71, 132, 0.08);
 }
 
 .auth-checkbox {
@@ -1385,7 +1451,7 @@ body {
 .auth-link {
   align-self: flex-end;
   font-size: 0.82rem;
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   text-decoration: none;
   margin-bottom: 1rem;
 }
@@ -1430,7 +1496,7 @@ body {
 }
 
 .google-hint a {
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1469,7 +1535,7 @@ body {
 }
 
 .auth-footer a {
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1497,7 +1563,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a4b8f;
+  background: var(--territorio-azul);
   color: #fff;
   font-weight: 700;
   font-size: 1.2rem;
@@ -1558,7 +1624,7 @@ body {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background: #1a4b8f;
+  background: var(--territorio-azul);
   border: 2px solid var(--surface, #fff);
 }
 
@@ -1673,8 +1739,8 @@ body {
 
 .auth-card form input:focus,
 .auth-card form textarea:focus {
-  border-color: #1a4b8f;
-  box-shadow: 0 0 0 3px rgba(26, 75, 143, 0.08);
+  border-color: var(--territorio-azul);
+  box-shadow: 0 0 0 3px rgba(30, 71, 132, 0.08);
 }
 
 .auth-card form button[type="submit"],
@@ -1686,7 +1752,7 @@ body {
   padding: 1rem 1.4rem;
   border: none;
   border-radius: 999px;
-  background: #1a4b8f;
+  background: var(--territorio-azul);
   color: #fff;
   font-weight: 700;
   font-size: 0.95rem;
@@ -1710,7 +1776,7 @@ body {
 
 .auth-messages li {
   background: #eff6ff;
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   font-size: 0.88rem;
@@ -1899,8 +1965,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
   background: #eff6ff;
-  color: #1a4b8f;
-  border: 1px solid rgba(26, 75, 143, 0.15);
+  color: var(--territorio-azul);
+  border: 1px solid rgba(30, 71, 132, 0.15);
 }
 
 .noticia-data {
@@ -2950,7 +3016,7 @@ body {
   max-width: min(320px, calc(100% - 3rem));
   padding: 1rem 1.25rem;
   border-radius: 1rem;
-  background: rgba(26, 75, 143, 0.95);
+  background: rgba(30, 71, 132, 0.95);
   color: #fff;
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
   font-size: 0.95rem;
@@ -3148,8 +3214,9 @@ body {
      prática cada vez que a fonte aumentasse, truncando os rótulos. */
   width: 14rem;
   flex-shrink: 0;
-  background: #16233c;
-  color: #cbd5e1;
+  background: var(--ceu);
+  color: var(--territorio-marinho);
+  border-right: 1px solid var(--territorio-linha);
   display: flex;
   flex-direction: column;
   padding: 1rem 0.85rem;
@@ -3174,7 +3241,6 @@ body {
 .app-sidebar-logo {
   height: 2rem;
   width: auto;
-  filter: brightness(0) invert(1);
 }
 
 /* logo-FNP.png é um lockup só (marca "FNP" + "Frente Nacional..." por
@@ -3209,10 +3275,10 @@ body {
 .sidebar-section-label {
   margin: 0.65rem 0 0.25rem;
   padding: 0 0.65rem;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted, #64748b);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--tinta-2, #47586c);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -3222,8 +3288,8 @@ body {
   align-items: center;
   gap: 0.6rem;
   padding: 0.5rem 0.65rem;
-  border-radius: 0.55rem;
-  color: #cbd5e1;
+  border-radius: 0.375rem;
+  color: var(--territorio-marinho);
   text-decoration: none;
   /* Mesmo tamanho da barra lateral do Admin (.fnp-nav-link) -- ficava
      menor de propósito porque "Exportar meus dados" não cabia, mas
@@ -3253,22 +3319,23 @@ body {
 }
 
 .sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--ceu-2);
+  color: var(--territorio-marinho);
 }
 
 .sidebar-link.active {
-  background: #1a4b8f;
-  color: #fff;
+  background: var(--territorio-acento);
+  color: var(--territorio-acento-texto);
+  font-weight: 600;
 }
 
 .sidebar-link-danger {
-  color: #f87171;
+  color: var(--cor-perigo);
 }
 
 .sidebar-link-danger:hover {
-  background: rgba(220, 38, 38, 0.18);
-  color: #fca5a5;
+  background: var(--cor-perigo-claro);
+  color: var(--cor-perigo-solido);
 }
 
 .sidebar-collapse-btn {
@@ -3278,17 +3345,17 @@ body {
   padding: 0.45rem 0.65rem;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--tinta-2, #47586c);
   cursor: pointer;
-  border-radius: 0.55rem;
-  font-size: 0.76rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
   margin-top: 0.4rem;
-  font-family: inherit;
+  font-family: var(--fonte-texto);
 }
 
 .sidebar-collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--ceu-2);
+  color: var(--territorio-marinho);
 }
 
 .sidebar-collapse-btn svg {
@@ -3317,12 +3384,24 @@ body {
 }
 
 .app-topbar {
+  /* Faixa marinha do Território: redefine os tokens de texto/borda/hover
+     localmente, igual a .territorio-faixa do guia de estilo -- assim todo
+     filho que já lia var(--text-secondary)/var(--border-color)/etc. (back
+     link, breadcrumb, divisor, icon-btn, busca) vira claro sozinho, sem
+     editar regra por regra. .notif-dropdown desfaz essa herança (é um
+     popover branco, não faz parte da faixa). */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, .82);
+  --text-muted: rgba(255, 255, 255, .7);
+  --border-color: rgba(255, 255, 255, .22);
+  --bg-surface-alt: rgba(255, 255, 255, .12);
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.85rem 1.5rem;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--territorio-marinho);
+  color: #fff;
+  border-bottom: 0;
   position: sticky;
   top: 0;
   z-index: 15;
@@ -3468,7 +3547,7 @@ body {
 }
 
 .topbar-search-trigger:hover {
-  border-color: #1a4b8f;
+  border-color: rgba(255, 255, 255, .55);
 }
 
 /* Só existe pro mobile (ver .topbar-mobile-search no @media) -- campo de
@@ -3506,14 +3585,22 @@ body {
 }
 
 .notif-dropdown {
+  /* Desfaz os tokens claros-sobre-marinho de .app-topbar: o dropdown é um
+     popover branco flutuando sobre a página, não faz parte da faixa. */
+  --text-primary: var(--cor-texto);
+  --text-secondary: var(--cor-texto-2);
+  --text-muted: var(--cor-texto-suave);
+  --border-color: var(--cor-borda);
+  --bg-surface-alt: var(--cor-superficie-3);
   position: absolute;
   top: calc(100% + 0.6rem);
   right: 0;
   width: 320px;
-  background: var(--bg-surface);
-  border-radius: 1rem;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 25px 55px rgba(15, 23, 42, 0.18);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  border-radius: var(--raio-md);
+  border: 1px solid var(--cor-borda);
+  box-shadow: var(--sombra-popover);
   z-index: 20;
   display: none;
 }
@@ -3535,7 +3622,7 @@ body {
 .notif-mark-all {
   border: none;
   background: none;
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   font-size: 0.78rem;
   cursor: pointer;
   font-weight: 600;
@@ -3560,7 +3647,7 @@ body {
 }
 
 .notif-item.unread {
-  background: rgba(26, 75, 143, 0.06);
+  background: rgba(30, 71, 132, 0.06);
 }
 
 .notif-msg {
@@ -3601,23 +3688,24 @@ body {
 .topbar-logout {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #dc2626;
+  color: rgba(255, 255, 255, .78);
   text-decoration: none;
   padding: 0.4rem 0.6rem;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   flex-shrink: 0;
 }
 
 .topbar-logout:hover {
-  background: #fef2f2;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
 }
 
 .user-avatar {
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 50%;
-  background: #1a4b8f;
-  color: #fff;
+  background: var(--territorio-acento);
+  color: var(--territorio-acento-texto);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3853,7 +3941,7 @@ body {
   width: 0.4rem;
   height: 0.4rem;
   border-radius: 50%;
-  background: #1a4b8f;
+  background: var(--territorio-azul);
 }
 
 .help-modal-footer {
@@ -3872,7 +3960,7 @@ body {
 }
 
 .help-modal-support a {
-  color: #1a4b8f;
+  color: var(--territorio-azul);
   font-weight: 600;
   text-decoration: none;
 }
@@ -4076,8 +4164,8 @@ body {
   width: 2.15rem;
   height: 2.15rem;
   border-radius: 0.6rem;
-  background: rgba(26, 75, 143, 0.1);
-  color: #1a4b8f;
+  background: rgba(30, 71, 132, 0.1);
+  color: var(--territorio-azul);
   margin-bottom: 0.55rem;
 }
 
@@ -4269,15 +4357,15 @@ body {
     width: 2.5rem;
     height: 2.5rem;
     border: none;
-    border-radius: 0.65rem;
-    background: rgba(255, 255, 255, 0.08);
-    color: #cbd5e1;
+    border-radius: 0.375rem;
+    background: var(--ceu-2);
+    color: var(--territorio-marinho);
     cursor: pointer;
   }
 
   .app-sidebar-close:hover {
-    background: rgba(255, 255, 255, 0.16);
-    color: #fff;
+    background: var(--territorio-acento);
+    color: var(--territorio-acento-texto);
   }
 
   .app-sidebar-close svg {
@@ -4517,26 +4605,44 @@ body {
 
 /* ==================== Tema escuro ==================== */
 
+/* --bg-*/--text-*/--border-color são o alias antigo: todo o CSS abaixo
+   (escrito antes da identidade "Território") continua lendo essas
+   variáveis -- só o valor passou a vir do token novo. */
 :root {
-  --bg-body-1: #f5f7fa;
-  --bg-body-2: #e4e9f0;
-  --bg-surface: #ffffff;
-  --bg-surface-alt: #f8fafc;
-  --text-primary: #111827;
-  --text-secondary: #475569;
-  --text-muted: #6b7280;
-  --border-color: #e2e8f0;
+  --bg-body-1: var(--ceu);
+  --bg-body-2: var(--ceu-2);
+  --bg-surface: var(--cor-superficie);
+  --bg-surface-alt: var(--cor-superficie-2);
+  --text-primary: var(--cor-texto);
+  --text-secondary: var(--cor-texto-2);
+  --text-muted: var(--cor-texto-suave);
+  --border-color: var(--cor-borda);
 }
 
 [data-theme="dark"] {
-  --bg-body-1: #0f172a;
+  --bg-body-1: #111827;
   --bg-body-2: #0b1220;
-  --bg-surface: #1e293b;
-  --bg-surface-alt: #263349;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
+  --bg-surface: #1f2937;
+  --bg-surface-alt: #172030;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+
+  --cor-superficie: #1f2937;
+  --cor-superficie-2: #172030;
+  --cor-superficie-3: #2b3544;
+  --cor-texto: #f3f4f6;
+  --cor-texto-2: #d1d5db;
+  --cor-texto-suave: #9ca3af;
+  --cor-borda: #374151;
+  --cor-borda-suave: #2b3544;
+  --cor-link: #94b8ff;
+  --cor-foco: #94b8ff;
+  --cor-perigo: #fca5a5;
+  --cor-perigo-solido: #dc2626;
+  --cor-perigo-claro: rgba(220, 38, 38, .15);
+  --cor-perigo-claro-borda: rgba(220, 38, 38, .35);
 }
 
 [data-theme="dark"] body {
