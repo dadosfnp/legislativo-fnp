@@ -105,7 +105,7 @@ class Proposicao(models.Model):
 
     titulo = models.CharField(max_length=1024)
     casa = models.CharField(max_length=32, choices=CASA_CHOICES)
-    status_tramitacao = models.CharField(max_length=128, blank=True)
+    status_tramitacao = models.CharField(max_length=255, blank=True)
     local = models.CharField(max_length=128, blank=True)
     pauta = models.BooleanField(default=False)
     urgente = models.BooleanField(default=False)
