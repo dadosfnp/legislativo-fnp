@@ -12,6 +12,6 @@ class TermoSentinelaAdmin(admin.ModelAdmin):
 
 @admin.register(ItemSentinelaVisto)
 class ItemSentinelaVistoAdmin(admin.ModelAdmin):
-    list_display = ('fonte', 'id_externo', 'titulo', 'alertado', 'visto_em')
-    list_filter = ('fonte', 'alertado')
-    search_fields = ('id_externo', 'titulo')
+    list_display = ('fonte', 'id_externo', 'titulo', 'termo', 'alertado', 'visto_em')
+    list_filter = ('fonte', 'alertado', 'termo')
+    search_fields = ('id_externo', 'titulo', 'termo')
