@@ -72,7 +72,7 @@ apps/
 static/
   css/
     style.css               # app-shell, dark mode, acessibilidade, cards, auth
-    admin-custom.css         # reskin completo do Django Admin (tema sempre claro, sidebar sempre escura)
+    admin-custom.css         # reskin completo do Django Admin (identidade "Território": tema sempre claro, sidebar clara igual ao site público)
   js/
     main.js
   img/
@@ -124,19 +124,39 @@ Os models são divididos por domínio em `apps.usuarios`, `apps.proposicoes` e `
 - exibir detalhes de proposições e suportar fórum de comentários com notificação aos participantes
 - autenticação opcional (navegação pública não exige login) via e-mail/senha ou Google OAuth
 
+### Identidade visual "Território" (FNP, desde 2026-11-12)
+
+Paleta e tipografia únicas da FNP, trazidas de `sistema-fnp` (guia de estilo
+compartilhado pelo usuário) pro legislativo-fnp inteiro — site público e
+Django Admin: marinho `#103758` / azul `#1e4784` / amarelo `#eeaf19` como
+cores de marca, tipografia Outfit (títulos/botões) + Work Sans (texto),
+ícones Phosphor Icons 2.1.1 variante duotone (baixados via CDN público
+`cdn.jsdelivr.net/npm/@phosphor-icons/core`, vendorizados inline nos
+templates — MIT, sem precisar do repositório privado `sistema-fnp` pra
+isso). Tokens de cor/raio/sombra em `:root` de `static/css/style.css`; as
+variáveis antigas (`--bg-surface`, `--text-primary`...) viram alias das
+novas, pra não quebrar o CSS já existente. Selos/tags são cor chapada, nunca
+degradê ("cor pelo significado, nunca por enfeite", regra do guia de
+estilo). `apps/legislativo/templatetags/admin_icons.py` é a fonte única dos
+ícones tanto do site público quanto do Admin.
+
+**Pendente**: os 3 SVGs de pattern decorativo (bastões) e qualquer variante
+de logo exclusiva do `sistema-fnp` — aguardando acesso ao repositório (ver
+Pendências).
+
 ### Padrão atual de UI
 
 - **Pública (não logado):** header simples só com logo (link externo para fnp.org.br) + botão "Entrar". Sem sidebar.
-- **Autenticada:** topbar estilo breadcrumb (`← Voltar | Título`, oculto na própria home) + busca Ctrl+K, tamanho de fonte, dark mode, notificações, avatar (foto real se houver, senão inicial) com nome "Nome Sobrenome" + sidebar lateral colapsável, mas a sidebar **só é exibida na página de perfil** (`/perfil/`), não em todo o site. Logo da FNP (link externo) aparece no topbar nas páginas sem sidebar.
+- **Autenticada:** topbar estilo breadcrumb (`← Voltar | Título`, oculto na própria home, fundo marinho) + busca Ctrl+K, tamanho de fonte, dark mode, notificações, avatar (foto real se houver, senão inicial em círculo amarelo) com nome "Nome Sobrenome" + sidebar lateral colapsável clara (fundo céu, item ativo em pílula amarela) — exibida sempre que a view define `mostrar_sidebar=True` no contexto (perfil, favoritos, seguindo, participações, monitoramento interno, radar tributário, cadastro/pendentes de proposição, solicitar exclusão — não só `/perfil/`). Logo da FNP (link externo) aparece no topbar nas páginas sem sidebar.
 - Cards compactos (redesenhados segundo justinmind.com/ui-design/cards): badges de prioridade/urgência, chip de tema, meta-linha com ícones (Casa/Status/Municípios), estrela de favorito sem círculo.
 - "Áreas de interesse" e filtro de tema em dropdown pesquisável (mesmo componente, `.tema-dropdown`).
 - Rodapé (`_footer.html`) só renderiza na home — demais páginas não o incluem (`base.html` checa `request.resolver_match.url_name == 'home'`); tem links de LGPD (Política de Privacidade, Exportar meus dados, Solicitar exclusão) + contato do DPO.
 - Acessibilidade: skip links (Alt+1/Alt+2), `:focus-visible` global, `prefers-reduced-motion`, `role="search"`, `aria-hidden` em ícones decorativos — ver `docs/adr` / commit `8efad51`.
-- Dark mode via `[data-theme="dark"]` + `localStorage['fnp-theme']`; tamanho de fonte via `localStorage['fnp-font-size']`; sidebar colapsada via `localStorage['fnp-sidebar-collapsed']`.
+- Dark mode via `[data-theme="dark"]` + `localStorage['fnp-theme']`; tamanho de fonte via `localStorage['fnp-font-size']`; sidebar colapsada via `localStorage['fnp-sidebar-collapsed']`. A sidebar (pública e do Admin) **não muda** com o dark mode — fundo céu claro é parte fixa da marca, independente do tema da página.
 
 ### Django Admin — identidade visual e navegação própria
 
-O Admin não usa mais o tema padrão do Django nem o modo escuro nativo (removido em `templates/admin/base_site.html` — `dark-mode-vars` vazio, sem toggle): cabeçalho, breadcrumb e conteúdo são **sempre claros**; só a barra lateral é escura (mesma paleta do site público). `AdminSite` customizado (`apps/legislativo/admin_site.py`, ligado via `FNPAdminConfig` no lugar de `django.contrib.admin` em `INSTALLED_APPS`) adiciona um dashboard na página inicial (`templates/admin/fnp_index.html`) com métricas clicáveis: comentários pendentes, cadastros pendentes, solicitações de exclusão, proposições urgentes/na pauta.
+O Admin não usa mais o tema padrão do Django nem o modo escuro nativo (removido em `templates/admin/base_site.html` — `dark-mode-vars` vazio, sem toggle): cabeçalho, breadcrumb e conteúdo são **sempre claros**. A barra lateral **também é clara** desde 2026-11-12 (pedido explícito do usuário, reabrindo a decisão antiga de "sidebar do Admin sempre escura, mesma paleta do site público porém invertida") — hoje usa a mesma paleta clara (céu/marinho/pílula amarela) da sidebar pública, ver "Identidade Território" acima. `AdminSite` customizado (`apps/legislativo/admin_site.py`, ligado via `FNPAdminConfig` no lugar de `django.contrib.admin` em `INSTALLED_APPS`) adiciona um dashboard na página inicial (`templates/admin/fnp_index.html`) com métricas clicáveis: comentários pendentes, cadastros pendentes, solicitações de exclusão, proposições urgentes/na pauta.
 
 A barra lateral (`templates/admin/nav_sidebar.html`) **não reaproveita** `admin/app_list.html` (a versão do Django sempre renderiza o link "Adicionar" de cada model, show_changelinks só controla "Modificar") — é um loop próprio: apps com 1 model viram link direto, apps com mais de um viram grupo recolhível (`<details>/<summary>` nativos, sem JS próprio), cada um com ícone (`apps/legislativo/templatetags/admin_icons.py`, mapeamento por `app_label`/`object_name` com fallback). Cuidado ao mexer aqui: Django define `a:link, a:visited { color: var(--link-fg) }` globalmente com especificidade maior que uma classe simples — qualquer novo link na sidebar precisa repetir os pseudo-seletores (`#nav-sidebar .algo:link, #nav-sidebar .algo:visited`) ou fica ilegível nos links já visitados.
 
@@ -431,6 +451,11 @@ de auditoria. Nunca colar comando com senha visível sem necessidade.
 
 **Mais urgente agora:**
 
+- **Acesso ao repositório `dadosfnp/sistema-fnp`** (convite de colaborador
+  pendente, 2026-11-12) — necessário só pros 3 SVGs de pattern decorativo
+  (bastões) e qualquer variante de logo exclusiva da identidade
+  "Território"; cores/fontes/ícones/sidebar/topbar já foram trazidos sem
+  precisar desse acesso (ícones via CDN público do Phosphor Icons, MIT).
 - ~~Concluir a configuração de SMTP real~~ — **resolvido de vez em
   2026-08-20, por um caminho diferente do planejado**: a DigitalOcean
   bloqueia por padrão as portas de SMTP de saída (587/465) em toda conta

@@ -2155,3 +2155,90 @@ Playwright: `controlsList` presente no vídeo, evento `contextmenu`
 prevenido de verdade (checado via `dispatchEvent` retornando `false`) em
 imagem e vídeo publicados de teste. Commitado e enviado pra `next`.
 
+### Merge dos PRs #9-#12 (radar tributário, auditoria de dados, atualizador de tramitação) + deploy (2026-11-12)
+
+Colega (`ronancastro-dot`) abriu 4 PRs direto no `dadosfnp/legislativo-fnp`
+(fora do fluxo `next`→`main` de sempre): `fix/normalizar-318` (#9, título
+descritivo do #318 vira `LC 237/2026`), `feat/radar-tributario` (#10, aba
+nova de cadastro de termos + alertas do app `sentinela`), `data/pec18-
+aprovada-2026-11` (#11, PEC 18/2025 aprovada no Senado + auditoria de 5
+proposições) e `feat/atualizador-tramitacao` (#12, `atualizar_tramitacao`
+v1 só Câmara, atualiza `ultima_movimentacao` das proposições já curadas e
+alerta seguidores, reusa signal de `comentarios/alertas.py`). Pedido do
+usuário: mesclar os 4 e subir tudo numa tacada só.
+
+- **CI vermelha nos #11/#12** não tinha nada a ver com o conteúdo dos PRs:
+  `pip-audit` reprovava por uma vulnerabilidade pré-existente no
+  `requirements.lock` (`oauthlib` 4.0.0, CVE-2026-49272, via
+  `django-allauth`) — corrigido com `pip-compile --upgrade-package
+  oauthlib` (só essa linha do lock mudou).
+- **Achado só em produção** (Postgres, não reproduz em SQLite local): o
+  `ingest_legislativo` do PR #11 falhava ao gravar a PEC 18/2025 —
+  `status_tramitacao` novo tinha 156 caracteres, estourando o
+  `CharField(max_length=128)`. Corrigido aumentando pra 255
+  (`proposicoes.0010_alter_proposicao_status_tramitacao`) e reaplicado o
+  registro que tinha falhado.
+- 207 testes (era 134 na sessão anterior — cresceu com os PRs mesclados),
+  `check` e `manage.py migrate` limpos antes de cada etapa.
+- Deploy real no droplet via SSH (usuário rodou os comandos manualmente
+  nesta sessão, acesso SSH não disponível na máquina local do Claude):
+  `git pull` + `docker compose build/up`, `ingest_legislativo` (dry-run →
+  real) pras duas massas de dados, `normalizar_titulos` (dry-run → real),
+  `atualizar_tramitacao` (dry-run → baseline `--quiet`, 18 atualizadas).
+  Cron novo adicionado (`30 10 * * *`, 30min depois do `sentinela_tributaria`
+  que já existia às 10h) sem duplicar a linha existente.
+
+### Identidade visual "Território" (FNP) no site público e no Admin (2026-11-12, mesma sessão)
+
+Usuário trouxe o guia de estilo único da FNP (de `sistema-fnp`, repositório
+privado — pediu acesso de colaborador, ainda pendente) e pediu pra trazer
+o padrão (cores, tipografia, sidebar, topbar, ícones) pro legislativo-fnp
+inteiro, tudo numa entrega só.
+
+- **Tokens** (`static/css/style.css`): paleta marinho `#103758`/azul
+  `#1e4784`/amarelo `#eeaf19`, Outfit (títulos/botões) + Work Sans (texto)
+  via Google Fonts (CSP já liberava os dois domínios, não precisou mexer
+  em `settings.py`). Variáveis antigas (`--bg-surface`, `--text-primary`...)
+  viraram alias das novas, pra não ter que reescrever as ~4700 linhas de
+  CSS já existentes.
+- **Sidebar pública** invertida de escura (`#16233c`) pra clara (céu
+  `#e8eef7`), pílula amarela no item ativo, 11 ícones hand-drawn trocados
+  por Phosphor duotone.
+- **Topbar** recolorida pra marinho — técnica de redefinir as variáveis de
+  texto/borda localmente em `.app-topbar` (igual ao `.territorio-faixa` do
+  guia), pra todo filho que já lia `var(--text-secondary)` etc. virar claro
+  sozinho; `.notif-dropdown` desfaz essa herança (é popover branco, não
+  parte da faixa).
+- **Selos/tags/botões**: gradiente trocado por cor chapada em tudo
+  (`.tag-alta/media/baixa/urgente/aprovada`, `.tag-posicao-*`,
+  `.badge-pauta*`, `.fbtn`) — regra do guia, "cor pelo significado, nunca
+  por enfeite".
+- **Ícones**: Phosphor Icons 2.1.1 duotone, baixados direto do CDN público
+  (`cdn.jsdelivr.net/npm/@phosphor-icons/core`, MIT) e vendorizados inline
+  nos templates — não precisou do acesso ao `sistema-fnp` pra isso.
+  `apps/legislativo/templatetags/admin_icons.py` virou a fonte única dos
+  ícones do site público e do Admin (antes eram SVGs stroke hand-drawn
+  próprios, viewBox 24x24; agora viewBox 256x256, `fill="currentColor"`).
+- **Admin**: tokens do próprio contrato de variável do Django
+  (`--primary`, `--header-bg`, `--link-fg`...) remapeados pra paleta nova.
+  **Sidebar do Admin também virou clara** — reabre a decisão antiga ("só a
+  barra lateral é escura", ver ADR/CLAUDE.md anteriores), só que a pedido
+  explícito do usuário depois de ver print comparando com o site público
+  ("preciso que o sistema inteiro fique exatamente no mesmo estilo").
+- **Achado no caminho**: campo `<select>` de "Área da FNP" em `/perfil/`
+  ficava com a cara padrão do navegador (quadrado) porque a regra
+  `.auth-form input[type="text"], input[type="email"]...` nunca incluía
+  `select` — só os `<input>`. Corrigido incluindo `select` na mesma regra.
+- Testado com Playwright (instalado na sessão, Chromium baixado) contra o
+  servidor de dev local: home logada/deslogada, sidebar aberta/recolhida/
+  mobile, `proposicao_detail`, `/perfil/`, `/admin/` (dashboard + grupo
+  recolhível aberto), `/contas/login/`, dark mode — sem erro de console
+  nem HTTP 4xx/5xx. 207 testes e `check` limpos.
+- Commitado (`563b250`) e enviado pra `next` e `main` (CI verde); deploy no
+  droplet deixado pro usuário rodar manualmente (`git pull` + `docker
+  compose build/up`, sem migration nem comando de dados nesta leva — só
+  CSS/template/ícone).
+- **Pendente**: os 3 SVGs de pattern decorativo (bastões) e logo
+  alternativo, exclusivos do `sistema-fnp` — aguardando o convite de
+  colaborador ser aceito.
+
