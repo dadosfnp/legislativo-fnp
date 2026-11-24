@@ -2067,6 +2067,12 @@ class CuradoriaEPrioridadesTest(TestCase):
         )
         self.assertEqual(Proposicao.objects.destaques().count(), 0)
 
+    def test_destaques_exclui_parada(self):
+        # Destaque com dado muito antigo (parada) não aparece no bloco.
+        viva = Proposicao.objects.create(titulo='PL viva', casa='camara', destaque_home=True, parada=False)
+        Proposicao.objects.create(titulo='PL 3776/2008', casa='camara', destaque_home=True, parada=True)
+        self.assertEqual(list(Proposicao.objects.destaques()), [viva])
+
     def test_home_limita_destaques_a_10(self):
         for i in range(12):
             Proposicao.objects.create(

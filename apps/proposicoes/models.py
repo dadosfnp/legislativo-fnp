@@ -58,8 +58,19 @@ class ProposicaoQuerySet(models.QuerySet):
 
     def destaques(self):
         """Prioridades da FNP para o bloco da home, na ordem definida pela
-        coordenação (menor ordem_destaque primeiro; empate pelo mais recente)."""
-        return self.publicadas().filter(destaque_home=True).order_by('ordem_destaque', '-criado_em')
+        coordenação (menor ordem_destaque primeiro; empate pelo mais recente).
+
+        Exclui as proposições ``parada=True`` (sem movimentação há ~4 anos ou
+        mais): destaque com dado muito antigo (ex.: PL 3776/2008 parado desde
+        2021) passa a impressão de que o painel está desatualizado. Se a matéria
+        voltar a andar, o próximo ingest/atualização limpa o ``parada`` e ela
+        volta ao bloco."""
+        return (
+            self.publicadas()
+            .filter(destaque_home=True)
+            .exclude(parada=True)
+            .order_by('ordem_destaque', '-criado_em')
+        )
 
 
 class Proposicao(models.Model):
