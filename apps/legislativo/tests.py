@@ -2458,6 +2458,11 @@ class IsAprovadaTest(TestCase):
     def test_transformado_na_lei(self):
         self.assertTrue(self._ap(ultima='21/10/2026: Transformado na Lei Complementar 238/2026'))
 
+    def test_aguardando_sancao(self):
+        # Aprovada no Congresso e enviada à sanção (ex.: PLP 299/2026) conta.
+        self.assertTrue(self._ap(status='Aguardando Sanção'))
+        self.assertTrue(self._ap(ultima='24/11/2026: aprovada na Câmara; remetida à sanção presidencial.'))
+
     def test_sancionada(self):
         self.assertTrue(self._ap(status='Sancionado'))
 
