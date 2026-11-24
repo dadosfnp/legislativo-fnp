@@ -2761,3 +2761,157 @@ class AtualizarApensacaoTest(TestCase):
             self.assertFalse(chamou_senado)
         senado.refresh_from_db()
         self.assertEqual(senado.apensada_a, '')
+
+
+def _fonte(status, ementa, link, local='', ultima=''):
+    return {
+        'titulo': 'X', 'casa': 'camara' if 'camara' in link else 'senado',
+        'status_tramitacao': status, 'local': local,
+        'ultima_movimentacao': ultima or status, 'ementa_resumida': ementa, 'link': link,
+    }
+
+
+class CasaAtivaLogicTest(TestCase):
+    """casa_ativa decide a Casa pela ordem terminal > handoff > recência."""
+
+    def _c(self, status, ementa='x', ultima=''):
+        return _fonte(status, ementa, 'camara.leg.br/...idProposicao=1', ultima=ultima)
+
+    def _s(self, status, ementa='x', ultima=''):
+        return _fonte(status, ementa, 'senado.leg.br/materia/1', ultima=ultima)
+
+    def test_so_camara(self):
+        from apps.legislativo.data_utils import casa_ativa
+        self.assertEqual(casa_ativa(self._c('Aguardando Parecer'), None), 'camara')
+
+    def test_so_senado(self):
+        from apps.legislativo.data_utils import casa_ativa
+        self.assertEqual(casa_ativa(None, self._s('Tramitando')), 'senado')
+
+    def test_nenhuma(self):
+        from apps.legislativo.data_utils import casa_ativa
+        self.assertIsNone(casa_ativa(None, None))
+
+    def test_terminal_camara_vence(self):
+        from apps.legislativo.data_utils import casa_ativa
+        # Câmara aprovada/sanção manda, mesmo o Senado ainda "tramitando".
+        self.assertEqual(casa_ativa(self._c('Aguardando Sanção'), self._s('Tramitando')), 'camara')
+
+    def test_handoff_remetida_a_camara(self):
+        from apps.legislativo.data_utils import casa_ativa
+        # Nenhuma terminal; Senado remeteu à Câmara -> Câmara ativa.
+        self.assertEqual(
+            casa_ativa(self._c('Aguardando Parecer'), self._s('REMETIDA À CÂMARA DOS DEPUTADOS')),
+            'camara',
+        )
+
+    def test_recencia_desempata(self):
+        from apps.legislativo.data_utils import casa_ativa
+        cam = self._c('Pronta para Pauta', ultima='Em pauta em 01/02/2026')
+        sen = self._s('Com a relatoria', ultima='Relatoria em 10/11/2026')
+        self.assertEqual(casa_ativa(cam, sen), 'senado')
+
+
+class EmentaCompativelTest(TestCase):
+    def test_iguais(self):
+        from apps.legislativo.data_utils import ementa_compativel
+        self.assertTrue(ementa_compativel('Altera a Lei Complementar 200 de 2023 arcabouço fiscal',
+                                           'Altera a Lei Complementar 200 de 2023 arcabouço fiscal'))
+
+    def test_disjuntas(self):
+        from apps.legislativo.data_utils import ementa_compativel
+        self.assertFalse(ementa_compativel('tarifa zero transporte urbano coletivo',
+                                           'imposto renda produtos industrializados fundo municípios'))
+
+    def test_vazia_indeterminado(self):
+        from apps.legislativo.data_utils import ementa_compativel
+        self.assertIsNone(ementa_compativel('', 'qualquer coisa aqui'))
+
+
+class ReconciliarCasasCommandTest(TestCase):
+    """reconciliar_casas faz a matéria seguir a Casa ativa; trava anticolisão
+    pela ementa; preserva curadoria."""
+
+    EMENTA = 'Altera a Lei Complementar 200 de 2023 e o arcabouço fiscal brasileiro'
+
+    def setUp(self):
+        Notificacao.objects.all().delete()
+        self.prop = Proposicao.objects.create(
+            titulo='PLP 299/2026', casa='senado',
+            link='https://www25.senado.leg.br/web/atividade/materias/-/materia/176328',
+            status_publicacao=Proposicao.PUBLICADA, aprovada=False,
+            ementa_resumida=self.EMENTA, posicionamento_fnp='Posição curada da FNP',
+        )
+
+    def _patch(self, cam, sen):
+        return mock.patch.multiple(
+            'apps.proposicoes.fontes',
+            buscar_camara=mock.Mock(return_value=cam),
+            buscar_senado=mock.Mock(return_value=sen),
+        )
+
+    def _cam(self, status, ementa=None, ultima=''):
+        return _fonte(status, ementa or self.EMENTA,
+                      'https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2655570',
+                      local='MESA', ultima=ultima)
+
+    def _sen(self, status, ementa=None, ultima=''):
+        return _fonte(status, ementa or self.EMENTA,
+                      'https://www25.senado.leg.br/web/atividade/materias/-/materia/176328', ultima=ultima)
+
+    def test_segue_para_camara_e_marca_aprovada(self):
+        cam = self._cam('Aguardando Sanção')
+        sen = self._sen('REMETIDA À CÂMARA DOS DEPUTADOS')
+        with self._patch(cam, sen):
+            call_command('reconciliar_casas')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.casa, 'camara')
+        self.assertIn('idProposicao=2655570', self.prop.link)
+        self.assertTrue(self.prop.aprovada)
+        self.assertEqual(self.prop.status_tramitacao, 'Aguardando Sanção')
+
+    def test_preserva_curadoria(self):
+        with self._patch(self._cam('Aguardando Sanção'), self._sen('REMETIDA À CÂMARA DOS DEPUTADOS')):
+            call_command('reconciliar_casas')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.posicionamento_fnp, 'Posição curada da FNP')
+
+    def test_colisao_de_numero_nao_troca(self):
+        # Câmara com ementa totalmente diferente (outra matéria de mesmo número).
+        cam = self._cam('Aguardando Sanção', ementa='tarifa zero transporte urbano coletivo aplicativos')
+        sen = self._sen('REMETIDA À CÂMARA DOS DEPUTADOS')
+        with self._patch(cam, sen):
+            call_command('reconciliar_casas')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.casa, 'senado')  # não trocou
+        self.assertIn('/materia/176328', self.prop.link)
+
+    def test_ja_na_casa_ativa_nao_mexe(self):
+        self.prop.casa = 'camara'
+        self.prop.link = 'https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=2655570'
+        self.prop.save()
+        with self._patch(self._cam('Aguardando Sanção'), None):
+            call_command('reconciliar_casas')
+        self.prop.refresh_from_db()
+        self.assertIn('idProposicao=2655570', self.prop.link)
+
+    def test_dry_run_nao_grava(self):
+        with self._patch(self._cam('Aguardando Sanção'), self._sen('REMETIDA À CÂMARA')):
+            call_command('reconciliar_casas', dry_run=True)
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.casa, 'senado')
+
+    def test_quiet_nao_alerta(self):
+        seguidor = Usuario.objects.create_user(username='rc', email='rc@fnp.org.br', password='x')
+        ProposicaoSeguida.objects.create(usuario=seguidor, proposicao=self.prop)
+        with self._patch(self._cam('Aguardando Sanção'), self._sen('REMETIDA À CÂMARA')):
+            call_command('reconciliar_casas', quiet=True)
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.casa, 'camara')
+        self.assertFalse(Notificacao.objects.filter(proposicao=self.prop).exists())
+
+    def test_indeterminada_nao_encontrada(self):
+        with self._patch(None, None):
+            call_command('reconciliar_casas')
+        self.prop.refresh_from_db()
+        self.assertEqual(self.prop.casa, 'senado')
