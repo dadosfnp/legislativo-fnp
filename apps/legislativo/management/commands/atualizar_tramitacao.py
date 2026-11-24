@@ -29,6 +29,7 @@ import re
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from apps.legislativo.data_utils import is_aprovada
 from apps.proposicoes import fontes
 from apps.proposicoes.models import Proposicao
 
@@ -82,23 +83,41 @@ class Command(BaseCommand):
             novo = dados['ultima']
             mudou = novo != (prop.ultima_movimentacao or '')
 
+            # "Virou lei": reconhece, pela situação fresca da Câmara, a matéria
+            # que foi transformada em norma/sancionada e ainda constava "em
+            # acompanhamento". Flipamos aprovada só de False->True: nunca
+            # regredimos uma aprovação já curada que a fonte do momento não
+            # reflita (ex.: PEC promulgada cujo retorno não bate o heurístico).
+            registro = {
+                'Status da Tramitação': dados.get('situacao') or '',
+                'Local': dados.get('orgao') or '',
+                'Última Movimentação': novo,
+            }
+            virou_lei = is_aprovada(registro) and not prop.aprovada
+
             if dry_run:
-                if mudou:
-                    self.stdout.write(f'[dry-run] {prop.titulo}: {prop.ultima_movimentacao!r} -> {novo!r}')
+                if mudou or virou_lei:
+                    extra = ' [vira APROVADA]' if virou_lei else ''
+                    self.stdout.write(f'[dry-run] {prop.titulo}: {prop.ultima_movimentacao!r} -> {novo!r}{extra}')
                     atualizadas += 1
                 continue
 
-            if mudou:
+            if mudou or virou_lei:
                 if quiet:
                     # .update() não dispara o signal de alerta (silencioso).
-                    Proposicao.objects.filter(pk=prop.pk).update(
-                        ultima_movimentacao=novo, sincronizado_em=agora)
+                    campos = {'ultima_movimentacao': novo, 'sincronizado_em': agora}
+                    if virou_lei:
+                        campos['aprovada'] = True
+                    Proposicao.objects.filter(pk=prop.pk).update(**campos)
                 else:
                     prop.ultima_movimentacao = novo
                     prop.sincronizado_em = agora
+                    if virou_lei:
+                        prop.aprovada = True
                     prop.save()  # dispara o alerta aos seguidores (CAMPOS_ALERTA)
                 atualizadas += 1
-                self.stdout.write(f'Atualizada: {prop.titulo} -> {novo}')
+                marca = ' [APROVADA]' if virou_lei else ''
+                self.stdout.write(f'Atualizada: {prop.titulo} -> {novo}{marca}')
             else:
                 # Nada mudou, mas consultamos a fonte: grava só a data da
                 # consulta, de forma silenciosa (sem save → sem alerta).

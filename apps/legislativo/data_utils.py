@@ -67,11 +67,22 @@ def is_aprovada(item: dict[str, Any]) -> bool:
         normalize_text(item.get(field))
         for field in ('Status da Tramitação', 'Local', 'Última Movimentação')
     ).lower()
+    # Sinais TERMINAIS (virou lei/norma): valem mesmo que o texto ainda cite
+    # comissão -- uma lei sancionada/promulgada/transformada é o fim da linha.
+    # Antes, matérias já transformadas em norma apareciam "em acompanhamento".
+    virou_norma = (
+        'promulgad' in combined
+        or 'sancionad' in combined
+        or ('transformad' in combined and ('lei' in combined or 'norma' in combined))
+        or ('convertid' in combined and 'lei' in combined)
+    )
+    if virou_norma:
+        return True
+    # Aprovação só em comissão (sem plenário) ainda não é aprovação final.
     if 'comissão' in combined and 'plenário' not in combined:
         return False
-    return (
-        ('aprovad' in combined and ('plenário' in combined or 'votação final' in combined or 'redação final' in combined))
-        or 'promulgad' in combined
+    return 'aprovad' in combined and (
+        'plenário' in combined or 'votação final' in combined or 'redação final' in combined
     )
 
 

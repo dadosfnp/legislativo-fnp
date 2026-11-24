@@ -2413,6 +2413,67 @@ class AtualizarTramitacaoTest(TestCase):
         self.prop.refresh_from_db()
         self.assertIsNone(self.prop.sincronizado_em)
 
+    def test_virou_lei_marca_aprovada(self):
+        # Matéria que virou lei deve passar a ostentar o selo APROVADA mesmo que
+        # antes constasse "em acompanhamento".
+        self.prop.aprovada = False
+        self.prop.save()
+        dados = {'ultima': '21/10/2026: Transformado na Lei Complementar 238/2026',
+                 'situacao': 'Transformado em Norma Jurídica', 'orgao': ''}
+        with mock.patch('apps.proposicoes.fontes.buscar_status_camara', return_value=dados):
+            call_command('atualizar_tramitacao')
+        self.prop.refresh_from_db()
+        self.assertTrue(self.prop.aprovada)
+
+    def test_nao_desmarca_aprovada_ja_curada(self):
+        # Flag curada (ex.: PEC promulgada) não pode regredir por um retorno de
+        # fonte que não bate o heurístico. Só flipa False->True, nunca o inverso.
+        self.prop.aprovada = True
+        self.prop.save()
+        dados = {'ultima': '01/02/2026: Designação de Relator', 'situacao': 'Aguardando Parecer', 'orgao': 'CCJ'}
+        with mock.patch('apps.proposicoes.fontes.buscar_status_camara', return_value=dados):
+            call_command('atualizar_tramitacao')
+        self.prop.refresh_from_db()
+        self.assertTrue(self.prop.aprovada)
+
+
+class IsAprovadaTest(TestCase):
+    """is_aprovada reconhece matérias que viraram lei/norma (sinais terminais),
+    além da aprovação em plenário. 'Aguardando' e aprovação só em comissão não
+    contam."""
+
+    def _ap(self, status='', local='', ultima=''):
+        from apps.legislativo.data_utils import is_aprovada
+        return is_aprovada({'Status da Tramitação': status, 'Local': local, 'Última Movimentação': ultima})
+
+    def test_transformado_em_norma_juridica(self):
+        self.assertTrue(self._ap(status='Transformado em Norma Jurídica'))
+
+    def test_transformado_na_lei(self):
+        self.assertTrue(self._ap(ultima='21/10/2026: Transformado na Lei Complementar 238/2026'))
+
+    def test_sancionada(self):
+        self.assertTrue(self._ap(status='Sancionado'))
+
+    def test_convertida_em_lei_mpv(self):
+        self.assertTrue(self._ap(status='Convertida na Lei nº 15.270/2025'))
+
+    def test_promulgada_continua_aprovada(self):
+        self.assertTrue(self._ap(status='Promulgada'))
+
+    def test_aprovada_no_plenario(self):
+        self.assertTrue(self._ap(status='Aprovada', local='Plenário'))
+
+    def test_virou_norma_vale_mesmo_citando_comissao(self):
+        # O sinal terminal "virou lei" vale mesmo que o texto ainda cite comissão.
+        self.assertTrue(self._ap(status='Transformado em Norma Jurídica', local='Comissão de Finanças'))
+
+    def test_aprovada_so_em_comissao_nao_conta(self):
+        self.assertFalse(self._ap(status='Aprovada', local='Comissão de Viação e Transportes'))
+
+    def test_aguardando_parecer_nao_conta(self):
+        self.assertFalse(self._ap(status='Aguardando Parecer', local='CCJ'))
+
 
 class BuscarSenadoTest(TestCase):
     """O /processo do Senado traz a situação em `situacaoAtual` (camelCase);
